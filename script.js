@@ -1,14 +1,15 @@
 /**
  * Created by yusuke on 2013/12/20.
+ * Modified by rotsuya on 2014/06/07.
  */
 
-//APIキー
-var APIKEY = '6165842a-5c0d-11e3-b514-75d3313b9d05';
+// APIキー
+var APIKEY = '19887cda-ec9e-11e3-ab0c-7380ef9fa423';
 
-//ユーザーリスト
+// ユーザーリスト
 var userList = [];
 
-//Callオブジェクト
+// Callオブジェクト
 var existingCall;
 
 // Compatibility
@@ -17,69 +18,70 @@ navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia 
 // PeerJSオブジェクトを生成
 var peer = new Peer({ key: APIKEY, debug: 3});
 
-// PeerIDを生成
-peer.on('open', function(){
-    $('#my-id').text(peer.id);
-});
-
-// 相手からのコールを受信したら自身のメディアストリームをセットして返答
-peer.on('call', function(call){
-    call.answer(window.localStream);
-    step3(call);
-});
-
-// エラーハンドラー
-peer.on('error', function(err){
-    alert(err.message);
-    step2();
-});
-
-// イベントハンドラー
-$(function(){
+// 初期化
+$(document).on('ready', function(){
 
     // 相手に接続
     $('#make-call').click(function(){
         var call = peer.call($('#contactlist').val(), window.localStream);
-        step3(call);
-
+        makeCall(call);
     });
 
     // 切断
     $('#end-call').click(function(){
         existingCall.close();
-        step2();
+        showCallUI();
     });
 
     // メディアストリームを再取得
-    $('#step1-retry').click(function(){
-        $('#step1-error').hide();
-        step1();
+    $('#showLocalVideo-retry').click(function(){
+        $('#showLocalVideo-error').hide();
+        showLocalVideo();
     });
 
     // ステップ１実行
-    step1();
+    showLocalVideo();
 
     //ユーザリス取得開始
     setInterval(getUserList, 2000);
 
 });
 
-function step1 () {
+// PeerIDを生成
+peer.on('open', function(){
+    $('#my-id').val(peer.id);
+});
+
+// 相手からのコールを受信したら自身のメディアストリームをセットして返答
+peer.on('call', function(call){
+    call.answer(window.localStream);
+    makeCall(call);
+});
+
+// エラーハンドラー
+peer.on('error', function(err){
+    alert(err.message);
+    showCallUI();
+});
+
+// ローカルのカメラ映像を表示する
+function showLocalVideo () {
     // メディアストリームを取得する
     navigator.getUserMedia({audio: true, video: true}, function(stream){
+        // ビデオタグのsrc属性に設定する
         $('#my-video').prop('src', URL.createObjectURL(stream));
         window.localStream = stream;
-        step2();
-    }, function(){ $('#step1-error').show(); });
+        showCallUI();
+    }, function(){ $('#get-local-video-error').show(); });
 }
 
-function step2 () {
+function showCallUI () {
     //UIコントロール
-    $('#step1, #step3').hide();
-    $('#step2').show();
+    $('#get-local-video, #finish-call').hide();
+    $('#call-others').show();
 }
 
-function step3 (call) {
+function makeCall (call) {
     // すでに接続中の場合はクローズする
     if (existingCall) {
         existingCall.close();
@@ -87,19 +89,19 @@ function step3 (call) {
 
     // 相手からのメディアストリームを待ち受ける
     call.on('stream', function(stream){
-        $('#their-video').prop('src', URL.createObjectURL(stream));
+        $('#their-video').attr('src', URL.createObjectURL(stream));
     });
 
     // 相手がクローズした場合
-    call.on('close', step2);
+    call.on('close', showCallUI);
 
     // Callオブジェクトを保存
     existingCall = call;
 
     // UIコントロール
-    $('#their-id').text(call.peer);
-    $('#step1, #step2').hide();
-    $('#step3').show();
+    $('#their-id').val(call.peer);
+    $('#get-local-video, #call-others').hide();
+    $('#finish-call').show();
 
 }
 
