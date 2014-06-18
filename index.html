@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<html>
 <head>
     <title>Simple Video Chat on SkyWay</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
@@ -6,53 +7,49 @@
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
-
-<div id="video-container">
-    <video id="their-video" autoplay></video>
-    <video id="my-video" muted="true" autoplay></video>
-</div>
-
+<body class="status-getting-local-video">
+<nav class="navbar navbar-default navbar-fixed-bottom" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <span class="navbar-brand"><small>Simple Video Chat</small></span>
+        </div>
+        <div class="navbar-form navbar-left form-inline">
+            <div class="form-group">
+                <label for="myId" class="control-label">あなたのID</label>
+                <input type="text" id="myId" class="form-control" readonly value="...">
+            </div>
+            <div class="form-group">
+                <label for="theirIds" class="ui-call control-label">接続先のID</label>
+                <select id="theirIds" class="ui-call form-control" name="contact"></select>
+                <button class="ui-call btn btn-success" id="buttonCall">接続</button>
+            </div>
+            <div class="form-group">
+                <label for="theirId" class="ui-close control-label">接続中のID</label>
+                <input type="text" id="theirId" class="ui-close form-control" readonly value="...">
+                <button class="ui-close btn btn-danger" id="buttonClose">終了</button>
+            </div>
+        </div>
+    </div>
+</nav>
 <div class="container">
-
-    <h2>SkyWay Video Chat</h2>
-
-    <!-- Get local audio/video stream -->
-    <div id="get-local-video">
+    <div id="alertLocalVideo" class="alert alert-danger">
+        カメラまたはマイクにアクセスできません。ブラウザで利用を許可して、再読み込みしてください。
+        <button class="btn btn-default" id="buttonLocalVideoRetry">再読み込み</button>
+    </div>
+    <div id="warnLocalVideo" class="alert alert-warning">
         <p>カメラとマイクの利用を許可してください。</p>
-        <div id="show-local-video-error">
-            <p>カメラまたはマイクにアクセスできません。ブラウザで利用が許可されているか確認して下さい。</p>
-            <a href="#" class="btn btn-primary" id="show-local-video-retry">メディアを再取得</a>
-        </div>
     </div>
-
-    <!-- Make calls to others -->
-    <div id="call-others">
-        <div class="form-group">
-            <label for="my-id" class="col-sm-2">あなたのID</label>
-            <input id="my-id" type="text" readonly value="..." size="60">
-        </div>
-        <div class="form-group">
-            <label for="contactlist" class="col-sm-2">相手のID</label>
-            <select id="contactlist" name="contact">
-            </select>
-        </div>
-        <a href="#" class="btn btn-primary" id="make-call">Call</a>
-    </div>
-
-    <!-- Call in progress -->
-    <div id="finish-call">
-        <div class="form-group">
-            <label for="their-id" class="col-sm-2">接続先</label>
-            <input id="their-id" type="text" readonly value="...">
-        </div>
-        <a href="#" class="btn btn-primary" id="end-call">チャットを終了する</a>
-    </div>
-
 </div>
+
+<div id="wrapperVideo">
+    <video id="theirVideo" autoplay></video>
+    <video id="myVideo" muted="true" autoplay></video>
+</div>
+
 <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 <script src="https://skyway.io/dist/0.3/peer.js"></script>
 <script src="script.js"></script>
+
 </body>
 </html>

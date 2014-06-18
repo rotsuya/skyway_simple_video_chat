@@ -4,13 +4,13 @@
  */
 
 // APIキー
-var APIKEY = '19887cda-ec9e-11e3-ab0c-7380ef9fa423';
-
-// ユーザーリスト
-var userList = [];
+var APIKEY = '6165842a-5c0d-11e3-b514-75d3313b9d05';
 
 // Callオブジェクト
 var existingCall;
+
+var getListTimer = -1;
+var myId = '';
 
 // Compatibility
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
@@ -22,34 +22,37 @@ var peer = new Peer({ key: APIKEY, debug: 3});
 $(document).on('ready', function(){
 
     // 相手に接続
-    $('#make-call').click(function(){
-        var call = peer.call($('#contactlist').val(), window.localStream);
+    $('#buttonCall').click(function(){
+        var call = peer.call($('#theirIds').val(), window.localStream);
         makeCall(call);
     });
 
     // 切断
-    $('#end-call').click(function(){
+    $('#buttonClose').click(function(){
         existingCall.close();
         showCallUI();
     });
 
     // メディアストリームを再取得
-    $('#showLocalVideo-retry').click(function(){
-        $('#showLocalVideo-error').hide();
-        showLocalVideo();
+    $('#buttonLocalVideoRetry').click(function(){
+        location.reload();
     });
 
     // ステップ１実行
     showLocalVideo();
 
-    //ユーザリス取得開始
-    setInterval(getUserList, 2000);
-
+    //ユーザリスト取得開始
+    getListTimer = setInterval(getUserList, 2000);
+    $(window).on('beforeunload', function() {
+        clearInterval(getListTimer);
+        peer.destroy();
+    });
 });
 
 // PeerIDを生成
 peer.on('open', function(){
-    $('#my-id').val(peer.id);
+    myId = peer.id;
+    $('#myId').val(myId);
 });
 
 // 相手からのコールを受信したら自身のメディアストリームをセットして返答
@@ -69,16 +72,18 @@ function showLocalVideo () {
     // メディアストリームを取得する
     navigator.getUserMedia({audio: true, video: true}, function(stream){
         // ビデオタグのsrc属性に設定する
-        $('#my-video').prop('src', URL.createObjectURL(stream));
+        $('#myVideo').attr('src', URL.createObjectURL(stream));
         window.localStream = stream;
         showCallUI();
-    }, function(){ $('#get-local-video-error').show(); });
+    }, function(){
+        $('#warnLocalVideo').hide();
+        $('#alertLocalVideo').show();
+    });
 }
 
 function showCallUI () {
     //UIコントロール
-    $('#get-local-video, #finish-call').hide();
-    $('#call-others').show();
+    $('body').removeClass('status-getting-local-video status-calling').addClass('status-waiting-for-call');
 }
 
 function makeCall (call) {
@@ -89,7 +94,7 @@ function makeCall (call) {
 
     // 相手からのメディアストリームを待ち受ける
     call.on('stream', function(stream){
-        $('#their-video').attr('src', URL.createObjectURL(stream));
+        $('#theirVideo').attr('src', URL.createObjectURL(stream));
     });
 
     // 相手がクローズした場合
@@ -99,23 +104,21 @@ function makeCall (call) {
     existingCall = call;
 
     // UIコントロール
-    $('#their-id').val(call.peer);
-    $('#get-local-video, #call-others').hide();
-    $('#finish-call').show();
-
+    $('#theirId').val(call.peer);
+    $('body').removeClass('status-getting-local-video status-waiting-for-call').addClass('status-calling');
 }
 
 function getUserList () {
     //ユーザリストを取得
-    $.get('https://skyway.io/active/list/'+APIKEY,
-        function(list){
-            for(var cnt = 0;cnt < list.length;cnt++){
-                if($.inArray(list[cnt],userList)<0 && list[cnt] != peer.id){
-                    userList.push(list[cnt]);
-                    $('#contactlist').append($('<option>', {"value":list[cnt],"text":list[cnt]}));
+    $.get('https://skyway.io/active/list/' + APIKEY, function (list) {
+            var $frag = $(document.createDocumentFragment());
+            for (var i = 0, length = list.length; i < length; i++) {
+                var id = list[i];
+                if (id !== myId) {
+                    $('<option>').attr('value', id).text(id).appendTo($frag);
                 }
             }
+            $('#theirIds').empty().append($frag);
         }
     );
 }
-
