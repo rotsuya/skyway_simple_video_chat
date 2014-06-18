@@ -111,14 +111,21 @@ function makeCall (call) {
 function getUserList () {
     //ユーザリストを取得
     $.get('https://skyway.io/active/list/' + APIKEY, function (list) {
-            var $frag = $(document.createDocumentFragment());
-            for (var i = 0, length = list.length; i < length; i++) {
-                var id = list[i];
-                if (id !== myId) {
-                    $('<option>').attr('value', id).text(id).appendTo($frag);
-                }
+        var $theirIds = $('#theirIds');
+        for (var i = 0, length = list.length; i < length; i++) {
+            var id = list[i];
+            if (id === myId) {
+                continue;
             }
-            $('#theirIds').empty().append($frag);
+            if ($theirIds.find('[value=' + id + ']').length === 0) {
+                $('<option>').attr('value', id).text(id).appendTo($theirIds);
+            }
         }
-    );
+        $theirIds.find('option').each(function() {
+            var $this = $(this);
+            if (list.indexOf($this.attr('value')) === -1) {
+                $this.remove();
+            }
+        });
+    });
 }
